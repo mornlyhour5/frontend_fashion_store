@@ -4,7 +4,7 @@ import client from './client'
 export const productsApi = createResource('products')
 export const categoriesApi = createResource('categories')
 export const brandsApi = createResource('brands')
-export const productReviewsApi = createResource('product-reviews')
+// export const productReviewsApi = createResource('product-reviews')
 export const addressesApi = createResource('addresses')
 export const ordersApi = createResource('Orders')
 export const cartsApi = createResource('carts')
@@ -45,6 +45,8 @@ export const productVariantsApi = {
     return client.patch(`/Product-variant/${variantId}/image/${imageId}/main`)
   },
 }
+
+export const productReviewsApi = createResource('Review')
 
 // Extra one-off endpoints that don't fit the plain REST shape
 export const authApi = {
