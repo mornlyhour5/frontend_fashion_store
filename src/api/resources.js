@@ -22,7 +22,7 @@ export const staffApi = createResource('staff')
 export const wishlistsApi = createResource('wishlists')
 export const wishlistItemsApi = createResource('wishlistItem')
 export const customerProfileApi = createResource('customer-profiles')
-export const productVariantsApi = createResource('Product-variant')
+// export const productVariantsApi = createResource('Product-variant')
 export const addressesadminApi = createResource('getAddressAdmin')
 export const productImagesApi = createResource('Product-image')
 export const orderItemsApi = createResource('order-items')
@@ -34,6 +34,16 @@ export const chatAttachmentsApi = createResource('chat-attachments')
 export const dashboardApi = {
   stats(params = {}) { return client.get('/dashboard/stats', { params }) },
   salesChart(params = {}) { return client.get('/dashboard/sales-chart', { params }) },
+}
+
+export const productVariantsApi = {
+  ...createResource('Product-variant'),
+  removeImage(variantId, imageId) {
+    return client.delete(`/Product-variant/${variantId}/image/${imageId}`)
+  },
+  setMainImage(variantId, imageId) {
+    return client.patch(`/Product-variant/${variantId}/image/${imageId}/main`)
+  },
 }
 
 // Extra one-off endpoints that don't fit the plain REST shape
