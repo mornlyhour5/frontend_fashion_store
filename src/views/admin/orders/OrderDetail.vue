@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
-import { ordersApi } from '@/api/resources'
+import { ordersApi, orderItemsApi } from '@/api/resources'
 import { useToastStore } from '@/stores/toast'
 import { ArrowLeft, MapPin, CreditCard, Package } from 'lucide-vue-next'
 
@@ -18,11 +18,11 @@ const updatingStatus = ref(false)
 const newStatus = ref('')
 
 const statusOptions = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'shipped', label: 'Shipped' },
-  { value: 'delivered', label: 'Delivered' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: '1', label: 'Pending' },
+  { value: '2', label: 'Paid' },
+  { value: '3', label: 'Shipped' },
+  { value: '4', label: 'Delivered' },
+  { value: '5', label: 'Cancelled' },
 ]
 
 async function loadOrder() {
@@ -100,9 +100,9 @@ onMounted(loadOrder)
                 <td colspan="4" class="text-center py-10 text-muted text-sm">No items found.</td>
               </tr>
               <tr v-for="item in order.items" :key="item.id" class="border-b border-app last:border-b-0">
-                <td class="px-5 py-3.5 text-main">{{ item.product?.name || `Product #${item.product_id}` }}</td>
+                <td class="px-5 py-3.5 text-main">{{ `Product #${item.product_id}` }}</td>
                 <td class="px-5 py-3.5 text-main">{{ item.quantity }}</td>
-                <td class="px-5 py-3.5 text-main">${{ Number(item.price).toFixed(2) }}</td>
+                <td class="px-5 py-3.5 text-main">${{ Number(item.unit_price).toFixed(2) }}</td>
                 <td class="px-5 py-3.5 text-main font-medium">${{ Number(item.total).toFixed(2) }}</td>
               </tr>
             </tbody>

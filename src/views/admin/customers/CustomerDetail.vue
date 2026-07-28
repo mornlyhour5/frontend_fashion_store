@@ -2,9 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { usersApi, ordersApi, addressesApi } from '@/api/resources'
+import { usersApi, orderadminApi, userAddressAPI, customerProfileApi } from '@/api/resources'
 import { useToastStore } from '@/stores/toast'
-import { ArrowLeft, Mail, Phone, MapPin } from 'lucide-vue-next'
+import { ArrowLeft, Mail, Phone, MapPin, User } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,17 +15,32 @@ const orders = ref([])
 const addresses = ref([])
 const loading = ref(true)
 
+const orderStatusLabels = {
+  1: 'pending',
+  2: 'paid',
+  3: 'shipped',
+  4: 'delivered',
+  5: 'cancelled',
+}
+
+function orderStatusLabel(value) {
+  if (value === null || value === undefined) return '—'
+  return orderStatusLabels[Number(value)] || String(value)
+}
+
 async function loadCustomer() {
   loading.value = true
   try {
     const [userRes, ordersRes, addrRes] = await Promise.all([
       usersApi.get(route.params.id),
-      ordersApi.list({ user_id: route.params.id, per_page: 10 }),
-      addressesApi.list({ user_id: route.params.id }),
+      orderadminApi.get(route.params.id),
+      userAddressAPI.get(route.params.id),
     ])
     customer.value = userRes.data.data || userRes.data
-    orders.value = ordersRes.data.data || ordersRes.data || []
-    addresses.value = addrRes.data.data || addrRes.data || []
+    const ordersData = ordersRes.data.data || ordersRes.data
+    orders.value = Array.isArray(ordersData) ? ordersData : (ordersData ? [ordersData] : [])
+    const addrData = addrRes.data.data || addrRes.data
+    addresses.value = Array.isArray(addrData) ? addrData : (addrData ? [addrData] : [])
   } catch (e) {
     toast.error('Could not load customer details.')
   } finally {
@@ -47,10 +62,12 @@ onMounted(loadCustomer)
     <template v-else-if="customer">
       <div class="flex items-center gap-4 flex-wrap">
         <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#D0B45C] to-[#8A6F32] flex items-center justify-center text-[#0B0B0B] font-semibold text-2xl">
-          {{ customer.name?.charAt(0).toUpperCase() }}
+          {{ (customer.customer_profile?.first_name || customer.name)?.charAt(0).toUpperCase() }}
         </div>
         <div>
-          <h1 class="text-2xl font-serif font-semibold text-main">{{ customer.name }}</h1>
+          <h1 class="text-2xl font-serif font-semibold text-main">
+            {{ customer.customer_profile ? `${customer.customer_profile.first_name} ${customer.customer_profile.last_name}` : customer.name }}
+          </h1>
           <p class="text-sm text-muted mt-1">Customer since {{ new Date(customer.created_at).toLocaleDateString() }}</p>
         </div>
       </div>
@@ -59,7 +76,7 @@ onMounted(loadCustomer)
         <div class="bg-card border border-app rounded-2xl p-5 shadow-luxury space-y-3">
           <h3 class="text-sm font-semibold text-main mb-1">Contact Info</h3>
           <div class="flex items-center gap-2 text-sm text-muted"><Mail class="w-4 h-4" /> {{ customer.email }}</div>
-          <div class="flex items-center gap-2 text-sm text-muted"><Phone class="w-4 h-4" /> {{ customer.phone || '—' }}</div>
+          <div class="flex items-center gap-2 text-sm text-muted"><Phone class="w-4 h-4" /> {{ customer.customer_profile?.phone || '—' }}</div>
         </div>
 
         <div class="bg-card border border-app rounded-2xl p-5 shadow-luxury space-y-3 lg:col-span-2">
@@ -90,9 +107,9 @@ onMounted(loadCustomer)
             <tr v-if="!orders.length">
               <td colspan="4" class="text-center py-10 text-muted text-sm">No orders yet.</td>
             </tr>
-            <tr v-for="order in orders" :key="order.id" class="border-b border-app last:border-b-0">
+            <tr v-for="order in orders.filter(Boolean)" :key="order.id" class="border-b border-app last:border-b-0">
               <td class="px-5 py-3.5 text-main font-medium">{{ order.order_number }}</td>
-              <td class="px-5 py-3.5"><BaseBadge :status="order.order_status" :text="order.order_status" /></td>
+              <td class="px-5 py-3.5"><BaseBadge :status="orderStatusLabel(order.order_status)" :text="orderStatusLabel(order.order_status)" /></td>
               <td class="px-5 py-3.5 text-main">${{ Number(order.total_amount).toFixed(2) }}</td>
               <td class="px-5 py-3.5 text-muted">{{ new Date(order.created_at).toLocaleDateString() }}</td>
             </tr>

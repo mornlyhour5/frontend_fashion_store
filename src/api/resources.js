@@ -18,14 +18,21 @@ export const getProfileApi = createResource('customerProfile')
 // ---- Admin-only resources (dashboard, staff, and deeper tables the storefront never touches) ----
 export const usersApi = createResource('users')
 export const staffApi = createResource('staff')
+export const userAddressAPI = createResource('getAddressCustomer');
 // export const customerStatusApi = createResource('customers');
 export const wishlistsApi = createResource('wishlists')
 export const wishlistItemsApi = createResource('wishlistItem')
 export const customerProfileApi = createResource('customer-profiles')
-// export const productVariantsApi = createResource('Product-variant')
-export const addressesadminApi = createResource('getAddressAdmin')
+
+//this block code for admin manages customer
+export const addressesadminApi = createResource('AddressAdmin')
+export const orderadminApi = createResource('getOrderCustomer')
+
+
+
+
 export const productImagesApi = createResource('Product-image')
-export const orderItemsApi = createResource('order-items')
+export const orderItemsApi = createResource('Order-item')
 export const orderStatusHistoryApi = createResource('order-status-histories')
 export const couponsApi = createResource('coupons')
 export const couponUsagesApi = createResource('coupon-usages')

@@ -5,8 +5,9 @@ import Modal from '@/components/admin-ui/Modal.vue'
 import ConfirmDialog from '@/components/admin-ui/ConfirmDialog.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { addressesadminApi } from '@/api/resources'
+import { addressesadminApi, usersApi } from '@/api/resources'
 import { useToastStore } from '@/stores/toast'
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-vue-next'
 
@@ -26,6 +27,8 @@ const page = ref(1)
 const perPage = ref(15)
 const searchQuery = ref('')
 const loading = ref(false)
+
+const customer = ref([])
 
 const modalOpen = ref(false)
 const confirmOpen = ref(false)
@@ -56,6 +59,16 @@ async function loadAddresses() {
     rows.value = []
   } finally {
     loading.value = false
+  }
+}
+
+async function loadCustomer() {
+  try {
+    const res = await usersApi.list({ per_page: 100 })
+    const data = res.data.data?.data || res.data.data || res.data || []
+    customer.value = Array.isArray(data) ? data : []
+  } catch (e) {
+    customer.value = []
   }
 }
 
@@ -101,7 +114,10 @@ async function handleDelete() {
   }
 }
 
-onMounted(loadAddresses)
+onMounted(() => {
+  loadAddresses()
+  loadCustomer()
+})
 </script>
 
 <template>
@@ -136,7 +152,10 @@ onMounted(loadAddresses)
 
     <Modal v-model="modalOpen" :title="isEditing ? 'Edit Address' : 'Add Address'" size="lg">
       <form @submit.prevent="handleSave" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <BaseInput v-model="form.user_id" label="User ID" required />
+        <div class="col-span-2">
+          <BaseSelect v-model="form.user_id" label="Customer"
+            :options="customer.map((p) => ({ value: p.id, label: p.name }))" required />
+        </div>
         <BaseInput v-model="form.label" label="Label" placeholder="e.g. Home, Office" />
         <BaseInput v-model="form.recipient_name" label="Recipient Name" required />
         <BaseInput v-model="form.phone" label="Phone" />

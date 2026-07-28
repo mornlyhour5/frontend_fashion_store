@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import { orderStatusHistoryApi } from '@/api/resources'
@@ -13,11 +13,33 @@ const toast = useToastStore()
 const history = ref([])
 const loading = ref(true)
 
+const statusLabels = {
+  1: 'pending',
+  2: 'paid',
+  3: 'shipped',
+  4: 'delivered',
+  5: 'cancelled',
+}
+
+function statusLabel(value) {
+  if (value === null || value === undefined) return null
+  return statusLabels[Number(value)] || String(value)
+}
+
+const orderedHistory = computed(() => {
+  return [...history.value].sort((a, b) => {
+    const aVal = Number(a.to_status)
+    const bVal = Number(b.to_status)
+    if (aVal !== bVal) return aVal - bVal
+    return new Date(a.changed_at) - new Date(b.changed_at)
+  })
+})
+
 async function loadHistory() {
   loading.value = true
   try {
     const res = await orderStatusHistoryApi.list({ order_id: route.params.id, per_page: 100, sort: '-changed_at' })
-    history.value = res.data.data || res.data || []
+    history.value = res.data.data?.data || res.data.data || res.data || []
   } catch (e) {
     toast.error('Could not load status history.')
     history.value = []
@@ -44,14 +66,14 @@ onMounted(loadHistory)
 
     <div class="bg-card border border-app rounded-2xl shadow-luxury p-6">
       <div v-if="loading" class="text-center py-16 text-muted text-sm">Loading history...</div>
-      <div v-else-if="!history.length" class="text-center py-16 text-muted text-sm">No status changes recorded.</div>
+      <div v-else-if="!orderedHistory.length" class="text-center py-16 text-muted text-sm">No status changes recorded.</div>
       <ol v-else class="relative border-l border-app ml-3 space-y-6">
-        <li v-for="entry in history" :key="entry.id" class="ml-6">
+        <li v-for="entry in orderedHistory" :key="entry.id" class="ml-6">
           <span class="absolute -left-[7px] w-3.5 h-3.5 rounded-full bg-[#C6A75A] ring-4 ring-app"></span>
           <div class="flex items-center gap-2 flex-wrap">
-            <BaseBadge :status="entry.from_status" :text="entry.from_status || 'created'" />
+            <BaseBadge :status="statusLabel(entry.from_status)" :text="statusLabel(entry.from_status) || 'created'" />
             <span class="text-muted text-xs">→</span>
-            <BaseBadge :status="entry.to_status" :text="entry.to_status" />
+            <BaseBadge :status="statusLabel(entry.to_status)" :text="statusLabel(entry.to_status)" />
           </div>
           <p class="text-xs text-muted mt-1.5">{{ new Date(entry.changed_at).toLocaleString() }} · by {{ entry.changed_by ? `User #${entry.changed_by}` : 'System' }}</p>
           <p v-if="entry.note" class="text-sm text-main mt-1.5 bg-card-alt rounded-lg px-3 py-2">{{ entry.note }}</p>
