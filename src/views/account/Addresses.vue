@@ -28,7 +28,7 @@ function resetForm() {
 async function loadAddresses() {
   loading.value = true
   try {
-    const res = await addressesApi.list({ user_id: auth.user.id })
+    const res = await addressesApi.list({ per_page: 20, sort: '-created_at' })
     addresses.value = res.data.data || res.data || []
   } catch (e) {
     toast.error('Could not load addresses.')

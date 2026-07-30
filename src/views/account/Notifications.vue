@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { notificationsApi } from '@/api/resources'
+import { notificationsUserApi } from '@/api/resources'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { Bell, CheckCheck, Package, Tag, MessageSquare } from 'lucide-vue-next'
@@ -15,7 +15,7 @@ const iconFor = (type) => ({ order: Package, promo: Tag, chat: MessageSquare }[t
 async function loadNotifications() {
   loading.value = true
   try {
-    const res = await notificationsApi.list({ per_page: 50, sort: '-created_at' })
+    const res = await notificationsUserApi.list({ per_page: 50, sort: '-created_at' })
     const payload = res.data?.data ?? res.data
     notifications.value = Array.isArray(payload) ? payload : (payload?.rows ?? payload?.data ?? [])
   } catch (e) {
@@ -29,7 +29,7 @@ async function loadNotifications() {
 async function markRead(n) {
   if (n.read_at) return
   try {
-    await notificationsApi.update(n.id, { read_at: new Date().toISOString() })
+    await notificationsUserApi.update(n.id, { read_at: new Date().toISOString() })
     n.read_at = new Date().toISOString()
   } catch (e) {
     toast.error('Failed to mark as read.')
@@ -40,7 +40,7 @@ async function markAllRead() {
   const unread = notifications.value.filter((n) => !n.read_at)
   if (!unread.length) return
   try {
-    await Promise.all(unread.map((n) => notificationsApi.update(n.id, { read_at: new Date().toISOString() })))
+    await Promise.all(unread.map((n) => notificationsUserApi.update(n.id, { read_at: new Date().toISOString() })))
     unread.forEach((n) => { n.read_at = new Date().toISOString() })
     toast.success('All notifications marked as read.')
   } catch (e) {

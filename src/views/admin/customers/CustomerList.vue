@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Eye, Lock, Ban, ShieldOff, ChevronDown } from 'lucide-vue-next'
+import { Eye, Lock, Ban, ShieldOff, ChevronDown, X } from 'lucide-vue-next'
 import Modal from '@/components/admin-ui/Modal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import DataTable from '@/components/admin-ui/DataTable.vue'
@@ -19,7 +19,7 @@ const columns = [
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
   { key: 'role', label: 'Role' },
-  { key: 'status', label: 'Status' }, // was account_status
+  { key: 'status', label: 'Status' },
   { key: 'created_at', label: 'Joined' },
   { key: 'actions', label: '', width: '90px' },
 ]
@@ -30,9 +30,19 @@ const page = ref(1)
 const perPage = ref(15)
 const searchQuery = ref('')
 const loading = ref(false)
-// const roleFilter = ref(null)
 
-// Maps AccountStatus enum -> badge status + label
+// Avatar lightbox
+const avatarPreviewOpen = ref(false)
+const previewAvatarUrl = ref(null)
+const previewAvatarName = ref('')
+
+function openAvatarPreview(row) {
+  if (!row.avata_url) return
+  previewAvatarUrl.value = row.avata_url
+  previewAvatarName.value = row.name
+  avatarPreviewOpen.value = true
+}
+
 const STATUS_MAP = {
   1: { status: 'inactive', label: 'Registered' },
   2: { status: 'pending', label: 'Pending' },
@@ -46,7 +56,6 @@ const STATUS_MAP = {
 async function loadUsers() {
   loading.value = true
   try {
-
     const res = await usersApi.list({
       page: page.value,
       per_page: perPage.value,
@@ -68,9 +77,8 @@ function viewCustomer(row) {
   router.push({ name: 'admin-customer-detail', params: { id: row.id } })
 }
 
-// --- Status change flow ---
 const confirmOpen = ref(false)
-const pendingAction = ref(null) // { row, status, label }
+const pendingAction = ref(null)
 const reason = ref('')
 const submitting = ref(false)
 
@@ -96,9 +104,9 @@ async function confirmStatusChange() {
   submitting.value = true
   try {
     await customerStatusApi.update(pendingAction.value.row.id, {
-  status: pendingAction.value.status,
-  reason: reason.value || null,
-})
+      status: pendingAction.value.status,
+      reason: reason.value || null,
+    })
     toast.success(`Account ${pendingAction.value.label.toLowerCase()}d.`)
     confirmOpen.value = false
     await loadUsers()
@@ -120,7 +128,6 @@ function getInitials(name) {
 }
 
 watch(page, loadUsers)
-// watch(roleFilter, () => { page.value = 1; loadUsers() })
 onMounted(loadUsers)
 </script>
 
@@ -131,11 +138,6 @@ onMounted(loadUsers)
         <h1 class="text-2xl font-serif font-semibold text-main">Customers</h1>
         <p class="text-sm text-muted mt-1">View and manage customers.</p>
       </div>
-      <!-- <select v-model="roleFilter" class="rounded-lg border border-border bg-card px-3 py-2">
-        <option :value="null">All</option>
-        <option :value="2">Staff</option>
-        <option :value="3">Customers</option>
-      </select> -->
     </div>
 
     <DataTable :columns="columns" :rows="rows" :loading="loading" :per-page="perPage" :total="total"
@@ -147,13 +149,20 @@ onMounted(loadUsers)
       </template>
       <template #cell-avatar="{ row }">
         <div class="flex items-center gap-3">
-          <img v-if="row.avatar_url" :src="row.avatar_url" :alt="row.name"
-            class="w-8 h-8 rounded-full object-cover border border-border"
-            @error="(e) => e.target.style.display = 'none'" />
-          <div v-else
-            class="w-8 h-8 rounded-full bg-card-alt border border-border flex items-center justify-center text-xs font-medium text-muted shrink-0">
-            {{ getInitials(row.name) }}
-          </div>
+          <button
+            type="button"
+            @click="openAvatarPreview(row)"
+            class="w-8 h-8 rounded-full overflow-hidden border border-border shrink-0"
+            :class="row.avata_url ? 'cursor-zoom-in hover:ring-2 hover:ring-[#C6A75A] transition-all' : 'cursor-default'"
+          >
+            <img v-if="row.avata_url" :src="row.avata_url" :alt="row.name"
+              class="w-full h-full object-cover"
+              @error="(e) => e.target.style.display = 'none'" />
+            <div v-else
+              class="w-full h-full bg-card-alt flex items-center justify-center text-xs font-medium text-muted">
+              {{ getInitials(row.name) }}
+            </div>
+          </button>
         </div>
       </template>
 
@@ -208,5 +217,28 @@ onMounted(loadUsers)
       <textarea v-model="reason" placeholder="Reason (optional, visible in audit log)"
         class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm mt-2" rows="2" />
     </ConfirmDialog>
+
+    <!-- Avatar lightbox -->
+    <Teleport to="body">
+      <div
+        v-if="avatarPreviewOpen"
+        class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-6"
+        @click="avatarPreviewOpen = false"
+      >
+        <button
+          class="absolute top-5 right-5 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+          @click="avatarPreviewOpen = false"
+        >
+          <X class="w-6 h-6" />
+        </button>
+        <div class="flex flex-col items-center gap-3" @click.stop>
+          <img
+            :src="previewAvatarUrl"
+            class="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl"
+          />
+          <p class="text-white/80 text-sm">{{ previewAvatarName }}</p>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

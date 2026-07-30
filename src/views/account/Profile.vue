@@ -23,8 +23,7 @@ const tabs = [
 ]
 const activeTab = ref('info')
 
-// ---- Integer-backed enum maps (users.gender, users.preferred_language) ----
-// Adjust these if your backend Enum classes differ.
+// ---- Integer-backed enum maps (customer_profile.gender, customer_profile.preferred_language) ----
 const GENDER_MAP = { 1: 'male', 2: 'female', 3: 'other' }
 const GENDER_MAP_REVERSE = { male: 1, female: 2, other: 3 }
 
@@ -32,15 +31,15 @@ const LANGUAGE_MAP = { 1: 'en', 2: 'es', 3: 'fr', 4: 'vi' }
 const LANGUAGE_MAP_REVERSE = { en: 1, es: 2, fr: 3, vi: 4 }
 
 // ---- Personal info ----
-// Everything lives directly on `users`: name, email, first_name, last_name,
-// phone, date_of_birth, gender (smallint), preferred_language (smallint)
+// email/avata live on `users`; first_name/last_name/phone/date_of_birth/gender/preferred_language
+// live on the nested `customer_profile` relation.
 const form = reactive({
   email: '',
   first_name: '',
   last_name: '',
   phone: '',
   date_of_birth: '',
-  gender: '', // string form for the <select>, mapped to/from int on load/save
+  gender: '',
   preferred_language: 'en',
 })
 
@@ -72,8 +71,6 @@ async function saveProfile() {
   if (!validateProfile()) return
   savingProfile.value = true
   try {
-    // Single flat update against `users` — no nested profile object.
-    // gender/preferred_language converted back to their smallint codes.
     await auth.updateProfile({
       email: form.email,
       first_name: form.first_name,
@@ -91,7 +88,7 @@ async function saveProfile() {
   }
 }
 
-// ---- Security / password ---- (unchanged, uses users.password)
+// ---- Security / password ----
 const passwords = ref({ current_password: '', password: '', password_confirmation: '' })
 const passwordErrors = ref({})
 const savingPassword = ref(false)
@@ -145,7 +142,7 @@ async function savePassword() {
   }
 }
 
-// ---- Notification preferences ---- (unchanged — not in your schema, likely a separate table)
+// ---- Notification preferences ----
 const prefs = reactive({
   email_order_updates: true,
   email_promotions: true,
@@ -167,7 +164,7 @@ async function savePreferences() {
   }
 }
 
-// ---- Danger zone ---- (unchanged)
+// ---- Danger zone ----
 const deleteConfirmText = ref('')
 const deletePassword = ref('')
 const deleting = ref(false)
@@ -199,15 +196,15 @@ async function loadCustomer() {
   try {
     await auth.fetchProfile()
     const u = auth.user || {}
+    const profile = u.customer_profile || {}
 
     form.email = u.email || ''
-    form.first_name = u.first_name || ''
-    form.last_name = u.last_name || ''
-    form.phone = u.phone || ''
-    form.date_of_birth = u.date_of_birth || ''
-    // Backend sends gender/preferred_language as smallints — map to strings for the <select>
-    form.gender = GENDER_MAP[u.gender] || ''
-    form.preferred_language = LANGUAGE_MAP[u.preferred_language] || 'en'
+    form.first_name = profile.first_name || ''
+    form.last_name = profile.last_name || ''
+    form.phone = profile.phone || ''
+    form.date_of_birth = profile.date_of_birth || ''
+    form.gender = GENDER_MAP[profile.gender] || ''
+    form.preferred_language = LANGUAGE_MAP[profile.preferred_language] || 'en'
   } catch (e) {
     toast.error('Could not load your profile.')
   } finally {

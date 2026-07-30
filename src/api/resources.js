@@ -5,24 +5,30 @@ export const productsApi = createResource('products')
 export const categoriesApi = createResource('categories')
 export const brandsApi = createResource('brands')
 // export const productReviewsApi = createResource('product-reviews')
-export const addressesApi = createResource('addresses')
-export const ordersApi = createResource('Orders')
 export const cartsApi = createResource('carts')
 export const cartItemsApi = createResource('cart-items')
-export const notificationsApi = createResource('notifications')
 export const conversationsApi = createResource('conversations')
 export const chatMessagesApi = createResource('chat-messages')
 export const getOrderforuserApi = createResource('getforuser')
 export const getProfileApi = createResource('customerProfile')
+// ---- Customer-only resources 
+export const addressesApi = createResource('AddressUser')
+export const ordersRecentApi = createResource('getOrderRecent')
+export const notificationsUserApi = createResource('notificationUser')
+
+// export const updateProfile
+
 
 // ---- Admin-only resources (dashboard, staff, and deeper tables the storefront never touches) ----
+export const ordersApi = createResource('Orders')
 export const usersApi = createResource('users')
 export const staffApi = createResource('staff')
 export const userAddressAPI = createResource('getAddressCustomer');
 // export const customerStatusApi = createResource('customers');
-export const wishlistsApi = createResource('wishlists')
-export const wishlistItemsApi = createResource('wishlistItem')
+export const wishlistsApi = createResource('WishAdmin')
+export const wishlistItemsApi = createResource('WishItemAdmin')
 export const customerProfileApi = createResource('customer-profiles')
+export const notificationsAdminApi = createResource('notificationAdmin')
 
 //this block code for admin manages customer
 export const addressesadminApi = createResource('AddressAdmin')

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { notificationsApi } from '@/api/resources'
+import { notificationsAdminApi } from '@/api/resources'
 import { useAuthStore } from './auth'
 
 export const useNotificationStore = defineStore('notifications', {
@@ -15,7 +15,7 @@ export const useNotificationStore = defineStore('notifications', {
       const auth = useAuthStore()
       if (!auth.isAuthenticated) return
       try {
-        const res = await notificationsApi.list({ per_page: 20, sort: '-created_at' })
+        const res = await notificationsAdminApi.list({ per_page: 20, sort: '-created_at' })
         const payload = res.data?.data ?? res.data
         // handle paginated shape: { data: [...], total, ... }
         this.items = Array.isArray(payload) ? payload : (payload?.data ?? [])

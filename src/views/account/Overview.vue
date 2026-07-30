@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { ordersApi } from '@/api/resources'
+import { ordersRecentApi } from '@/api/resources'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { Package, MapPin, Heart, ArrowRight, Settings } from 'lucide-vue-next'
@@ -15,8 +15,8 @@ const loading = ref(true)
 async function loadRecentOrders() {
   loading.value = true
   try {
-    const res = await ordersApi.list({ user_id: auth.user.id, per_page: 3, sort: '-created_at' })
-    recentOrders.value = res.data.data || res.data || []
+    const res = await ordersRecentApi.list({ user_id: auth.user.id, per_page: 5, sort: '-created_at' })
+    recentOrders.value = res.data.data?.data || res.data.data || res.data || []
   } catch (e) {
     recentOrders.value = []
   } finally {
@@ -33,7 +33,7 @@ onMounted(loadRecentOrders)
     <div class="bg-card border border-app rounded-2xl p-5 flex items-center justify-between flex-wrap gap-4">
       <div class="flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#D0B45C] to-[#8A6F32] flex items-center justify-center text-[#0B0B0B] font-semibold text-xl overflow-hidden">
-          <img v-if="auth.user?.avata" :src="auth.user.avata" class="w-full h-full object-cover" />
+          <img v-if="auth.user?.avata" :src="auth.user.avata_url" class="w-full h-full object-cover" />
           <span v-else>{{ auth.firstName.charAt(0).toUpperCase() }}</span>
         </div>
         <div>
@@ -76,7 +76,7 @@ onMounted(loadRecentOrders)
       <div v-if="loading" class="p-6 text-center text-muted text-sm">Loading...</div>
       <div v-else-if="!recentOrders.length" class="p-8 text-center text-muted text-sm">No orders yet.</div>
       <RouterLink
-        v-for="order in recentOrders" :key="order.id"
+        v-for="order in recentOrders.filter(o => o && o.id)" :key="order.id"
         :to="{ name: 'account-order-detail', params: { id: order.id } }"
         class="flex items-center justify-between px-6 py-4 border-b border-app last:border-b-0 hover:bg-card-alt/50 transition-colors"
       >

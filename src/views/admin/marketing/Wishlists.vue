@@ -72,7 +72,7 @@ async function openItems(row) {
   itemsLoading.value = true
   wishlistItems.value = []
   try {
-    const res = await wishlistItemsApi.list({ wishlist_id: row.id })
+    const res = await wishlistItemsApi.get(row.id)
 
     const data =
       res.data?.data?.original?.data ??

@@ -13,6 +13,7 @@ import { Plus, Pencil, Trash2, MapPin } from 'lucide-vue-next'
 
 const toast = useToastStore()
 const columns = [
+  { key: 'user_id', label: 'User' },
   { key: 'recipient_name', label: 'Recipient' },
   { key: 'phone', label: 'Phone' },
   { key: 'address', label: 'Address' },
