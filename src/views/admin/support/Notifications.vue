@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { notificationsAdminApi } from '@/api/resources'
+import { notificationsAdminApi, notificationReadApi } from '@/api/resources'
 import { useToastStore } from '@/stores/toast'
 import { Bell, CheckCheck, X, User, Tag, Clock } from 'lucide-vue-next'
 import Modal from '@/components/admin-ui/Modal.vue'
@@ -29,7 +29,7 @@ async function loadNotifications() {
 async function markRead(n) {
   if (n.read_at) return
   try {
-    await notificationsAdminApi.update(n.id, { read_at: new Date().toISOString() })
+    await notificationReadApi.update(n.id)
     n.read_at = new Date().toISOString()
   } catch (e) {
     toast.error('Failed to mark as read.')
@@ -84,7 +84,7 @@ onMounted(loadNotifications)
           <p class="text-xs text-muted/70 mt-1">{{ new Date(n.created_at).toLocaleString() }}</p>
         </div>
         <CheckCheck v-if="n.read_at" class="w-4 h-4 text-[#4CAF7D] shrink-0 mt-1" />
-        <span v-else class="w-2 h-2 rounded-full bg-[#C6A75A] shrink-0 mt-2"></span>
+        <span v-else class="w-2 h-2 rounded-full bg-[#ffb700] shrink-0 mt-2"></span>
       </button>
     </div>
 

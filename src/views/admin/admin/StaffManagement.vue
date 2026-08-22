@@ -16,7 +16,7 @@ const columns = [
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
   { key: 'role', label: 'Role' },
-  { key: 'active', label: 'Status' },
+  { key: 'status', label: 'Status' },
   { key: 'last_login_at', label: 'Last Login' },
   { key: 'actions', label: '', width: '100px' },
 ]
@@ -41,6 +41,16 @@ const statusOptions = [{ value: 1, label: 'Active' }, { value: 0, label: 'Inacti
 
 function resetForm() {
   form.name = ''; form.email = ''; form.password = ''; form.role = 'staff'; form.active = 1
+}
+
+const STATUS_MAP = {
+  1: { status: 'inactive', label: 'Registered' },
+  2: { status: 'pending', label: 'Pending' },
+  3: { status: 'active', label: 'Active' },
+  4: { status: 'inactive', label: 'Suspended' },
+  5: { status: 'inactive', label: 'Deactivated' },
+  6: { status: 'inactive', label: 'Banned' },
+  7: { status: 'inactive', label: 'Locked' },
 }
 
 async function loadStaff() {
@@ -145,8 +155,19 @@ onMounted(loadStaff)
       <template #cell-role="{ value }">
         <BaseBadge :status="value === 'admin' ? 'active' : 'default'" :text="value" />
       </template>
+
       <template #cell-active="{ value }">
-        <BaseBadge :status="value ? 'active' : 'inactive'" :text="value ? 'Active' : 'Inactive'" />
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full" :class="{
+            'bg-emerald-500': value === 3,
+            'bg-amber-500': value === 2 || value === 1,
+            'bg-red-500': value === 4 || value === 6 || value === 7,
+            'bg-gray-500': value === 5,
+          }" />
+                    <BaseBadge :status="STATUS_MAP[value]?.status ?? 'inactive'" :text="STATUS_MAP[value]?.label ?? 'Unknown'" />
+
+        </span>
+        <!-- <BaseBadge :status="value ? 'active' : 'inactive'" :text="value ? 'Active' : 'Inactive'" /> -->
       </template>
       <template #cell-last_login_at="{ value }">{{ value ? new Date(value).toLocaleString() : 'Never' }}</template>
       <template #cell-actions="{ row }">

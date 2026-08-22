@@ -21,7 +21,7 @@ export function createResource(endpoint) {
     },
 
     // Plain JSON update (no file involved)
-    update(id, data) {
+    update(id, data) { 
       return client.put(`/${endpoint}/${id}`, data)
     },
 

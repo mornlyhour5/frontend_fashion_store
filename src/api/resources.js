@@ -16,7 +16,8 @@ export const addressesApi = createResource('AddressUser')
 export const ordersRecentApi = createResource('getOrderRecent')
 export const notificationsUserApi = createResource('notificationUser')
 
-// export const updateProfile
+// public route
+export const notificationReadApi = createResource('notificationRead')
 
 
 // ---- Admin-only resources (dashboard, staff, and deeper tables the storefront never touches) ----

@@ -69,9 +69,9 @@ onMounted(loadHomeData)
         <RouterLink
           v-for="cat in categories" :key="cat.id"
           :to="{ name: 'category', params: { slug: cat.slug } }"
-          class="group relative aspect-square rounded-2xl overflow-hidden bg-card-alt flex items-end p-5"
+          
         >
-          <img v-if="cat.image" :src="cat.image_url" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <!-- <img v-if="cat.image" :src="cat.image_url" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> -->
           <span class="relative text-white font-serif text-lg font-semibold drop-shadow" v-if="cat.image">{{ cat.name }}</span>
           <span class="relative text-main font-serif text-lg font-semibold" v-else>{{ cat.name }}</span>
         </RouterLink>

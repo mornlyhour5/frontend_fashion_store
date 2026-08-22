@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { notificationsUserApi } from '@/api/resources'
+import { notificationsUserApi, notificationReadApi } from '@/api/resources'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { Bell, CheckCheck, Package, Tag, MessageSquare } from 'lucide-vue-next'
@@ -29,7 +29,7 @@ async function loadNotifications() {
 async function markRead(n) {
   if (n.read_at) return
   try {
-    await notificationsUserApi.update(n.id, { read_at: new Date().toISOString() })
+    await notificationReadApi.update(n.id)
     n.read_at = new Date().toISOString()
   } catch (e) {
     toast.error('Failed to mark as read.')
