@@ -12,6 +12,53 @@ const featured = ref([])
 const categories = ref([])
 const loading = ref(true)
 
+const scrollRef = ref(null)
+const isDragging = ref(false)
+const isPaused = ref(false)
+let startX = 0
+let scrollLeft = 0
+
+function onMouseDown(e) {
+  isDragging.value = true
+  isPaused.value = true
+  startX = e.pageX - scrollRef.value.offsetLeft
+  scrollLeft = scrollRef.value.scrollLeft
+}
+function onMouseMove(e) {
+  if (!isDragging.value) return
+  e.preventDefault()
+  const x = e.pageX - scrollRef.value.offsetLeft
+  const walk = (x - startX) * 1.5
+  scrollRef.value.scrollLeft = scrollLeft - walk
+}
+function stopDrag() {
+  isDragging.value = false
+  setTimeout(() => { isPaused.value = false }, 1500)
+}
+
+function onTouchStart(e) {
+  isPaused.value = true
+  startX = e.touches[0].pageX - scrollRef.value.offsetLeft
+  scrollLeft = scrollRef.value.scrollLeft
+}
+function onTouchMove(e) {
+  const x = e.touches[0].pageX - scrollRef.value.offsetLeft
+  const walk = (x - startX) * 1.5
+  scrollRef.value.scrollLeft = scrollLeft - walk
+}
+function onTouchEnd() {
+  setTimeout(() => { isPaused.value = false }, 1500)
+}
+
+function onWheel(e) {
+  if (Math.abs(e.deltaX) > 0) return
+  e.preventDefault()
+  isPaused.value = true
+  scrollRef.value.scrollLeft += e.deltaY
+  clearTimeout(onWheel._t)
+  onWheel._t = setTimeout(() => { isPaused.value = false }, 1500)
+}
+
 async function loadHomeData() {
   loading.value = true
   try {
@@ -61,23 +108,43 @@ onMounted(loadHomeData)
     </section>
 
     <!-- Categories -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 py-16 overflow-hidden">
       <div class="flex items-center justify-between mb-8">
         <h2 class="text-2xl font-serif font-semibold text-main">Shop by Category</h2>
       </div>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <RouterLink
-          v-for="cat in categories" :key="cat.id"
-          :to="{ name: 'category', params: { slug: cat.slug } }"
-          
+
+      <div
+        ref="scrollRef"
+        class="relative w-full overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove"
+        @mouseup="stopDrag"
+        @mouseleave="stopDrag"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+        @wheel="onWheel"
+      >
+        <div
+          class="flex w-max gap-4"
+          :class="{ 'animate-scroll-rtl': !isPaused }"
+          :style="{ 'animation-play-state': isPaused ? 'paused' : 'running' }"
         >
-          <!-- <img v-if="cat.image" :src="cat.image_url" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> -->
-          <span class="relative text-white font-serif text-lg font-semibold drop-shadow" v-if="cat.image">{{ cat.name }}</span>
-          <span class="relative text-main font-serif text-lg font-semibold" v-else>{{ cat.name }}</span>
-        </RouterLink>
-        <div v-if="!categories.length && !loading" class="col-span-full text-center py-10 text-muted text-sm">
-          Categories will appear here once your catalog is connected.
+          <RouterLink
+            v-for="(cat, i) in [...categories, ...categories]" :key="cat.id + '-' + i"
+            :to="{ name: 'category', params: { slug: cat.slug } }"
+            class="shrink-0 w-48 h-28 rounded-xl bg-card-alt border border-[#C6A75A]/20 flex items-center justify-center px-4 hover:border-[#C6A75A]/60 hover:shadow-gold transition-all select-none"
+            @click="isDragging && $event.preventDefault()"
+          >
+            <span class="text-main font-serif text-lg font-semibold text-center truncate pointer-events-none">
+              {{ cat.name }}
+            </span>
+          </RouterLink>
         </div>
+      </div>
+
+      <div v-if="!categories.length && !loading" class="text-center py-10 text-muted text-sm">
+        Categories will appear here once your catalog is connected.
       </div>
     </section>
 
@@ -116,3 +183,13 @@ onMounted(loadHomeData)
     </section>
   </MainLayout>
 </template>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

@@ -64,3 +64,11 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+@keyframes scroll-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-scroll-rtl {
+  animation: scroll-rtl 60s linear infinite;
+}
