@@ -3,11 +3,12 @@ import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
 import ProductCard from '@/components/product/ProductCard.vue'
-import { productsApi, categoriesApi } from '@/api/resources'
+import { productsApi, categoriesApi, productResource } from '@/api/resources'
 import { useToastStore } from '@/stores/toast'
 import { ArrowRight } from 'lucide-vue-next'
 
 const toast = useToastStore()
+const trendingProducts = ref([]);
 const featured = ref([])
 const categories = ref([])
 const loading = ref(true)
@@ -62,21 +63,27 @@ function onWheel(e) {
 async function loadHomeData() {
   loading.value = true
   try {
-    const [prodRes, catRes] = await Promise.all([
-      productsApi.list({ per_page: 8, sort: '-views_count' }),
-      categoriesApi.list({ per_page: 4, parent_id: 'null' }),
-    ])
-    featured.value = prodRes.data.data || prodRes.data || []
+    const catRes = await categoriesApi.list({ per_page: 4, parent_id: 'null' })
     categories.value = catRes.data.data || catRes.data || []
   } catch (e) {
-    featured.value = []
     categories.value = []
   } finally {
     loading.value = false
   }
 }
 
-onMounted(loadHomeData)
+onMounted(async () => {
+  loading.value = true
+  try {
+    await loadHomeData()
+    const res = await productResource.trending(8)
+    trendingProducts.value = res.data.data
+  } catch (e) {
+    trendingProducts.value = []
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
@@ -92,16 +99,18 @@ onMounted(loadHomeData)
           <p class="text-muted text-base leading-relaxed mb-8 max-w-md">
             Discover pieces designed to last — thoughtfully made, quietly elegant, built for the way you actually live.
           </p>
-          <RouterLink
-            to="/shop"
-            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#D0B45C] to-[#A88A42] text-[#0B0B0B] font-semibold text-sm shadow-gold hover:brightness-110 transition-all"
-          >
-            Shop the Collection <ArrowRight class="w-4 h-4" />
+          <RouterLink to="/shop"
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#D0B45C] to-[#A88A42] text-[#0B0B0B] font-semibold text-sm shadow-gold hover:brightness-110 transition-all">
+            Shop the Collection
+            <ArrowRight class="w-4 h-4" />
           </RouterLink>
         </div>
-        <div class="aspect-[4/5] rounded-2xl bg-gradient-to-br from-[#C6A75A]/20 to-[#8A6F32]/10 flex items-center justify-center">
+        <div
+          class="aspect-[4/5] rounded-2xl bg-gradient-to-br from-[#C6A75A]/20 to-[#8A6F32]/10 flex items-center justify-center">
           <span class="font-serif text-2xl text-muted italic">Hero imagery goes here
-            <img src="../assets/Images/louis-vuitton-nano-christopher-east-west-louis-vuitton-silk-tech--M2A458_PM1_Worn view.avif" alt="">
+            <img
+              src="../assets/Images/louis-vuitton-nano-christopher-east-west-louis-vuitton-silk-tech--M2A458_PM1_Worn view.avif"
+              alt="">
           </span>
         </div>
       </div>
@@ -113,30 +122,16 @@ onMounted(loadHomeData)
         <h2 class="text-2xl font-serif font-semibold text-main">Shop by Category</h2>
       </div>
 
-      <div
-        ref="scrollRef"
-        class="relative w-full overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
-        @mousedown="onMouseDown"
-        @mousemove="onMouseMove"
-        @mouseup="stopDrag"
-        @mouseleave="stopDrag"
-        @touchstart="onTouchStart"
-        @touchmove="onTouchMove"
-        @touchend="onTouchEnd"
-        @wheel="onWheel"
-      >
-        <div
-          class="flex w-max gap-4"
-          :class="{ 'animate-scroll-rtl': !isPaused }"
-          :style="{ 'animation-play-state': isPaused ? 'paused' : 'running' }"
-        >
-          <RouterLink
-            v-for="(cat, i) in [...categories, ...categories]" :key="cat.id + '-' + i"
+      <div ref="scrollRef" class="relative w-full overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+        @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="stopDrag" @mouseleave="stopDrag"
+        @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd" @wheel="onWheel">
+        <div class="flex w-max gap-4" :class="{ 'animate-scroll-rtl': !isPaused }"
+          :style="{ 'animation-play-state': isPaused ? 'paused' : 'running' }">
+          <RouterLink v-for="(cat, i) in [...categories, ...categories]" :key="cat.id + '-' + i"
             :to="{ name: 'category', params: { slug: cat.slug } }"
-            class="shrink-0 w-48 h-28 rounded-xl bg-card-alt border border-[#C6A75A]/20 flex items-center justify-center px-4 hover:border-[#C6A75A]/60 hover:shadow-gold transition-all select-none"
-            @click="isDragging && $event.preventDefault()"
-          >
-            <span class="text-main font-serif text-lg font-semibold text-center truncate pointer-events-none">
+            class="shrink-0 flex items-center justify-center px-6 h-28 hover:opacity-80 transition-opacity select-none"
+            @click="isDragging && $event.preventDefault()">
+            <span class="text-main font-serif text-lg font-semibold text-center whitespace-nowrap pointer-events-none">
               {{ cat.name }}
             </span>
           </RouterLink>
@@ -153,12 +148,13 @@ onMounted(loadHomeData)
       <div class="flex items-center justify-between mb-8">
         <h2 class="text-2xl font-serif font-semibold text-main">Trending Now</h2>
         <RouterLink to="/shop" class="text-sm text-[#C6A75A] hover:underline flex items-center gap-1">
-          View all <ArrowRight class="w-3.5 h-3.5" />
+          View all
+          <ArrowRight class="w-3.5 h-3.5" />
         </RouterLink>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <ProductCard v-for="product in featured" :key="product.id" :product="product" />
-        <div v-if="!featured.length && !loading" class="col-span-full text-center py-16 text-muted text-sm">
+        <ProductCard v-for="product in trendingProducts" :key="product.id" :product="product" />
+        <div v-if="!trendingProducts.length && !loading" class="col-span-full text-center py-16 text-muted text-sm">
           Products will appear here once your catalog is connected.
         </div>
       </div>
@@ -188,6 +184,7 @@ onMounted(loadHomeData)
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

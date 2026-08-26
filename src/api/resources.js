@@ -1,6 +1,13 @@
 import { createResource } from './resource'
 import client from './client'
 
+
+// home page
+export const productResource = {
+  ...createResource('products'),
+  trending: (limit = 10) => client.get(`products/trending?limit=${limit}`),
+}
+
 export const productsApi = createResource('products')
 export const categoriesApi = createResource('categories')
 export const brandsApi = createResource('brands')

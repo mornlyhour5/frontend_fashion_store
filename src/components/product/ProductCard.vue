@@ -15,8 +15,8 @@ function toggleWishlist() {
   <RouterLink :to="{ name: 'product-detail', params: { slug: product.slug } }" class="group block">
     <div class="relative aspect-[3/4] rounded-xl overflow-hidden bg-card-alt mb-3">
       <img
-        v-if="product.image_url"
-        :src="product.image_url" :alt="product.name"
+        v-if="product.image"
+        :src="product.image" :alt="product.name"
         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
       <div v-else class="w-full h-full flex items-center justify-center text-muted text-sm">No image</div>
