@@ -297,7 +297,7 @@ onMounted(async () => {
       :per-page="perPage" :total="total" search-placeholder="Search products..." @search="loadProducts">
       <template #cell-image="{ row }">
         <div class="w-10 h-10 rounded-lg bg-card-alt overflow-hidden flex items-center justify-center">
-          <img v-if="row.thumbnail" :src="row.image_url" class="w-full h-full object-cover" />
+          <img v-if="row.thumbnail" :src="row.images" class="w-full h-full object-cover" />
           <span v-else class="text-muted text-xs">—</span>
         </div>
       </template>

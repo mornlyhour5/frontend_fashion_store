@@ -7,6 +7,12 @@ export const productResource = {
   ...createResource('products'),
   trending: (limit = 10) => client.get(`products/trending?limit=${limit}`),
 }
+export const productsDetailApi = {
+  ...createResource('products'),
+  getBySlug(slug) {
+    return client.get(`/products/slug/${slug}`)
+  },
+}
 
 export const productsApi = createResource('products')
 export const categoriesApi = createResource('categories')

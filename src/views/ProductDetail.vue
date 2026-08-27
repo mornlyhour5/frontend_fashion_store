@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import ProductCard from '@/components/product/ProductCard.vue'
-import { productsApi, productReviewsApi } from '@/api/resources'
+import { productsDetailApi } from '@/api/resources'
 import { useCartStore } from '@/stores/cart'
 import { useWishlistStore } from '@/stores/wishlist'
 import { useToastStore } from '@/stores/toast'
@@ -25,7 +25,6 @@ const loading = ref(true)
 const selectedColor = ref('')
 const selectedSize = ref('')
 const quantity = ref(1)
-const activeImage = ref(0)
 const activeTab = ref('description')
 
 const availableColors = computed(() => [...new Set(variants.value.map((v) => v.color).filter(Boolean))])
@@ -43,8 +42,8 @@ const avgRating = computed(() => {
 async function loadProduct() {
   loading.value = true
   try {
-    const res = await productsApi.list({ slug: route.params.slug })
-    const found = (res.data.data || res.data || [])[0]
+    const res = await productsDetailApi.getBySlug(route.params.slug)
+    const found = res.data.data
     if (!found) {
       toast.error('Product not found.')
       router.push({ name: 'shop' })
@@ -52,14 +51,12 @@ async function loadProduct() {
     }
     product.value = found
     variants.value = found.variants || []
+    reviews.value = found.reviews || []
+
     if (availableColors.value.length) selectedColor.value = availableColors.value[0]
     if (availableSizes.value.length) selectedSize.value = availableSizes.value[0]
 
-    const [reviewRes, relatedRes] = await Promise.all([
-      productReviewsApi.list({ product_id: found.id, status: 'approved', per_page: 20 }),
-      productsApi.list({ category_id: found.category_id, per_page: 4 }),
-    ])
-    reviews.value = reviewRes.data.data || reviewRes.data || []
+    const relatedRes = await productsDetailApi.list({ category_id: found.category_id, per_page: 4 })
     related.value = (relatedRes.data.data || relatedRes.data || []).filter((p) => p.id !== found.id)
   } catch (e) {
     toast.error('Could not load product details.')
@@ -93,7 +90,7 @@ onMounted(loadProduct)
         <!-- Gallery -->
         <div>
           <div class="aspect-[3/4] rounded-2xl bg-card-alt overflow-hidden mb-3">
-            <img v-if="product.image_url" :src="product.image_url" class="w-full h-full object-cover" />
+            <img v-if="product.images" :src="product.images" class="w-full h-full object-cover" />
             <div v-else class="w-full h-full flex items-center justify-center text-muted">No image available</div>
           </div>
         </div>
